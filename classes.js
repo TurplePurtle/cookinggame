@@ -36,7 +36,7 @@ export class Item {
   static nextId = 1;
   /** @type {Item[]} */
   static items = [];
-  /** @type {ItemType[]} */
+  /** @type {Order[]} */
   static orders = [];
 
   static getUniqueId() {
@@ -51,19 +51,16 @@ export class Item {
     this.createdAt = Date.now();
     this.type = type;
     this.onclick = () => {
-      if (Item.orders.includes(this.type)) {
-        removeItem(this, Item.items);
-        removeItem(this.type, Item.orders);
+      const orderIndex = Item.orders.findIndex(order => order.contains(this.type));
+      if (orderIndex >= 0) {
+        remove(this, Item.items);
+        removeIndex(orderIndex, Item.orders);
       } else if (this.type.tapAction != undefined) {
         this.type.tapAction.execute(this, Item.items);
       }
     };
     this.ontimer = () => {
-      this.type.timerAction.execute(this, Item.items);
-    }
-    // TODO: use global tick timer instead of making one timer per item.
-    if (this.type.timerAction != undefined) {
-      window.setTimeout(this.ontimer, this.type.time);
+      this.type.timerAction?.execute(this, Item.items);
     }
   }
 
@@ -96,7 +93,7 @@ export class Action {
    */
   execute(item, items) {
     if (item.type.isConsumable) {
-      if (!removeItem(item, items)) return;
+      if (!remove(item, items)) return;
     }
     for (let i = 0; i < this.amount; i++) {
       items.push(this.itemType.create());
@@ -104,14 +101,72 @@ export class Action {
   }
 }
 
+export class Order {
+  /**
+   * @param {ItemType} type
+   * @param {number} time
+   */
+  constructor(type, time) {
+    this.createdAt = Date.now();
+    this.time = time;
+    this.type = type;
+  }
+
+  /**
+   * @param {ItemType} type
+   */
+  contains(type) {
+    return this.type === type;
+  }
+}
+
+export class GameState {
+  /**
+   * @param {Item[]} resources
+   */
+  constructor(resources) {
+    /** @type {Item[]} */
+    this.resources = resources;
+    /** @type {Order[]} */
+    this.orders = [];
+    /** @type {Item[]} */
+    this.items = [];
+  }
+
+  tick() {
+    const now = Date.now();
+    for (const item of this.items) {
+      if (item.getAge() > item.type.time) {
+        item.ontimer();
+      }
+    }
+    for (const order of this.orders) {
+      if (now - order.createdAt > order.time) {
+        remove(order, this.orders);
+      }
+    }
+  }
+}
+
+/**
+ * @template T
+ * @param {number} index
+ * @param {T[]} array
+ */
+function removeIndex(index, array) {
+  if (index < 0 || index >= array.length) throw Error('Index out of bounds.');
+  array.splice(index, 1);
+}
+
 /**
  * @template T
  * @param {T} item
- * @param {T[]} items
+ * @param {T[]} array
  * @returns {boolean}
  */
-function removeItem(item, items) {
-  const index = items.indexOf(item);
-  if (index >= 0) items.splice(index, 1);
-  return index >= 0;
+function remove(item, array) {
+  const index = array.indexOf(item);
+  if (index < 0) return false;
+  removeIndex(index, array);
+  return true;
 }

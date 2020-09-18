@@ -22,7 +22,7 @@ export const chickenCooking = new ItemType(
   true,
   undefined,
   new Action(chickenCooked),
-  5000,
+  3000,
 );
 
 export const chickenRaw = new ItemType(
