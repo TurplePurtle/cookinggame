@@ -32,19 +32,26 @@ export class ItemType {
   }
 }
 
-let nextId = 1;
-const getUniqueId = () => nextId++;
+const uniqueId = {
+  /** @private */
+  _nextId: 1,
+  next() {
+    return this._nextId++;
+  },
+};
 
 export class Item {
   /**
    * @param {ItemType} type
    */
   constructor(type) {
-    this.id = getUniqueId();
+    this.id = uniqueId.next();
     this.createdAt = Date.now();
     this.type = type;
     this.onclick = () => {
-      const orderIndex = Item.state.orders.findIndex(order => order.contains(this.type));
+      const orderIndex = Item.state.orders.findIndex(order =>
+        order.contains(this.type),
+      );
       if (orderIndex >= 0) {
         remove(this, Item.state.items);
         removeIndex(orderIndex, Item.state.orders);
@@ -54,7 +61,7 @@ export class Item {
     };
     this.ontimer = () => {
       this.type.timerAction?.execute(this, Item.state.items);
-    }
+    };
   }
 
   get name() {

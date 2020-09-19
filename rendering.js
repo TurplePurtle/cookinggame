@@ -1,6 +1,6 @@
 import {html, render} from 'https://unpkg.com/lit-html@1.3.0?module';
 import {styleMap} from 'https://unpkg.com/lit-html@1.3.0/directives/style-map.js?module';
-import {Item, ItemType, Order, GameState} from './classes.js';
+import {Item, Order, GameState} from './classes.js';
 
 /**
  * @param {Item} item
@@ -10,8 +10,12 @@ function renderItem(item) {
   const style = styleMap({
     fontWeight: item.type.tapAction != null ? 'bold' : '',
   });
-  const timer = item.type.timerAction ? ` ${Math.ceil((item.type.time - item.getAge())/1000)}` : '';
-  return html`<span @mousedown=${item.onclick} style=${style}>(${item.name}${timer})</span>`;
+  const timer = item.type.timerAction
+    ? ` ${Math.ceil((item.type.time - item.getAge()) / 1000)}`
+    : '';
+  return html`<span @mousedown=${item.onclick} style=${style}
+    >(${item.name}${timer})</span
+  >`;
 }
 
 /**
@@ -19,7 +23,7 @@ function renderItem(item) {
  * @returns {unknown}
  */
 function renderOrder(order) {
-  const timer = Math.ceil((order.time - (Date.now() - order.createdAt))/1000);
+  const timer = Math.ceil((order.time - (Date.now() - order.createdAt)) / 1000);
   return html`<span>(${order.type.name} ${timer})</span>`;
 }
 
@@ -29,18 +33,9 @@ function renderOrder(order) {
  */
 function renderRoot({orders, items, resources}) {
   return html`
-    <p>
-      Orders:
-      ${orders.map(renderOrder)}
-    </p>
-    <p>
-      Items:
-      ${items.map(renderItem)}
-    </p>
-    <p>
-      Resources:
-      ${resources.map(renderItem)}
-    </p>
+    <p>Orders: ${orders.map(renderOrder)}</p>
+    <p>Items: ${items.map(renderItem)}</p>
+    <p>Resources: ${resources.map(renderItem)}</p>
   `;
 }
 

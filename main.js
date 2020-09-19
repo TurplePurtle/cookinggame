@@ -2,9 +2,7 @@ import {Item, Order, GameState} from './classes.js';
 import * as itemTypes from './item-types.js';
 import {renderGame} from './rendering.js';
 
-const state = new GameState([
-  new Item(itemTypes.chickenRaw),
-]);
+const state = new GameState([new Item(itemTypes.chickenRaw)]);
 
 state.orders.push(
   new Order(itemTypes.chickenCut, 10000),

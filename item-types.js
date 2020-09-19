@@ -1,6 +1,6 @@
 import {Action, ItemType} from './classes.js';
 
-export const chickenBurned = new ItemType('burned chicken');
+export const chickenBurned = new ItemType('burned chicken', false);
 
 export const chickenCut = new ItemType(
   'cut chicken',
