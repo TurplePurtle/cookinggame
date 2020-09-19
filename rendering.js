@@ -1,4 +1,6 @@
+//@ts-ignore
 import {html, render} from 'https://unpkg.com/lit-html@1.3.0?module';
+//@ts-ignore
 import {styleMap} from 'https://unpkg.com/lit-html@1.3.0/directives/style-map.js?module';
 import {Item, Order, GameState} from './classes.js';
 
