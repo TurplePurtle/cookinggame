@@ -32,35 +32,28 @@ export class ItemType {
   }
 }
 
+let nextId = 1;
+const getUniqueId = () => nextId++;
+
 export class Item {
-  static nextId = 1;
-  /** @type {Item[]} */
-  static items = [];
-  /** @type {Order[]} */
-  static orders = [];
-
-  static getUniqueId() {
-    return Item.nextId++;
-  }
-
   /**
    * @param {ItemType} type
    */
   constructor(type) {
-    this.id = Item.getUniqueId();
+    this.id = getUniqueId();
     this.createdAt = Date.now();
     this.type = type;
     this.onclick = () => {
-      const orderIndex = Item.orders.findIndex(order => order.contains(this.type));
+      const orderIndex = Item.state.orders.findIndex(order => order.contains(this.type));
       if (orderIndex >= 0) {
-        remove(this, Item.items);
-        removeIndex(orderIndex, Item.orders);
+        remove(this, Item.state.items);
+        removeIndex(orderIndex, Item.state.orders);
       } else if (this.type.tapAction != undefined) {
-        this.type.tapAction.execute(this, Item.items);
+        this.type.tapAction.execute(this, Item.state.items);
       }
     };
     this.ontimer = () => {
-      this.type.timerAction?.execute(this, Item.items);
+      this.type.timerAction?.execute(this, Item.state.items);
     }
   }
 
@@ -76,6 +69,9 @@ export class Item {
     return `[Item ${this.id} ${this.name}]`;
   }
 }
+
+/** @type {GameState} */
+Item.state;
 
 export class Action {
   /**

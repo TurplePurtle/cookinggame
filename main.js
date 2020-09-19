@@ -11,8 +11,7 @@ state.orders.push(
   new Order(itemTypes.chickenCut, 10000),
 );
 
-Item.items = state.items;
-Item.orders = state.orders;
+Item.state = state;
 
 function tick() {
   state.tick();
