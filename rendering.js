@@ -8,7 +8,7 @@ import {Item, Order, GameState} from './classes.js';
  * @param {string} path
  */
 function renderImage(path) {
-  return html`<img src="/assets/${path}" />`;
+  return html`<img src="assets/${path}" />`;
 }
 
 /**
