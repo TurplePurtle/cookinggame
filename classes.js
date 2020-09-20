@@ -1,8 +1,17 @@
-import {assert, count, isEmpty, remove, removeFirst, removeIndex, uniqueId} from './util.js';
+import {
+  assert,
+  count,
+  isEmpty,
+  remove,
+  removeFirst,
+  removeIndex,
+  uniqueId,
+} from './util.js';
 
 export class ItemType {
   /**
    * @param {string} name
+   * @param {string} imagePath
    * @param {boolean} isConsumable
    * @param {Action} tapAction
    * @param {Action} timerAction
@@ -10,12 +19,14 @@ export class ItemType {
    */
   constructor(
     name,
+    imagePath,
     isConsumable,
     tapAction = undefined,
     timerAction = undefined,
     time = 0,
   ) {
     this.name = name;
+    this.imagePath = imagePath;
     this.isConsumable = isConsumable;
     this.tapAction = tapAction;
     this.timerAction = timerAction;
@@ -37,16 +48,12 @@ export class Item {
     this.type = type;
   }
 
-  get name() {
-    return this.type.name;
-  }
-
   getAge(now = Date.now()) {
     return now - this.createdAt;
   }
 
   toString() {
-    return `[Item ${this.id} ${this.name}]`;
+    return `[Item ${this.id} ${this.type.name}]`;
   }
 }
 

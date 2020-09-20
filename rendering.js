@@ -5,6 +5,13 @@ import {styleMap} from 'https://unpkg.com/lit-html@1.3.0/directives/style-map.js
 import {Item, Order, GameState} from './classes.js';
 
 /**
+ * @param {string} path
+ */
+function renderImage(path) {
+  return html`<img src="/assets/${path}" />`;
+}
+
+/**
  * @param {Item} item
  * @param {GameState} state
  * @returns {unknown}
@@ -17,7 +24,7 @@ function renderItem(item, state) {
     ? ` ${Math.ceil((item.type.time - item.getAge()) / 1000)}`
     : '';
   return html`<span @mousedown=${() => state.onItemTap(item)} style=${style}
-    >(${item.name}${timer})</span
+    >(${renderImage(item.type.imagePath)}${timer})</span
   >`;
 }
 
@@ -27,7 +34,7 @@ function renderItem(item, state) {
  */
 function renderOrder(order) {
   const timer = Math.ceil((order.time - (Date.now() - order.createdAt)) / 1000);
-  return html`<span>(${order.type.name} ${timer})</span>`;
+  return html`<span>(${renderImage(order.type.imagePath)} ${timer})</span>`;
 }
 
 /**
@@ -36,9 +43,22 @@ function renderOrder(order) {
  */
 function renderRoot(state) {
   return html`
-    <p>Orders: ${state.orders.map(renderOrder)}</p>
-    <p>Items: ${state.items.map(item => renderItem(item, state))}</p>
-    <p>Resources: ${state.resources.map(item => renderItem(item, state))}</p>
+    <div id="orders">
+      <header>Orders:</header>
+      <div class="container">${state.orders.map(renderOrder)}</div>
+    </div>
+    <div id="items">
+      <header>Items:</header>
+      <div class="container">
+        ${state.items.map(item => renderItem(item, state))}
+      </div>
+    </div>
+    <div id="resources">
+      <header>Resources:</header>
+      <div class="container">
+        ${state.resources.map(item => renderItem(item, state))}
+      </div>
+    </div>
   `;
 }
 

@@ -1,0 +1,36 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+img {
+  height: 100px;
+}
+
+#orders,
+#items,
+#resources {
+  position: absolute;
+  left: 0;
+  width: 100%;
+}
+
+#orders {
+  border: 8px double;
+  top: 0;
+}
+
+#items {
+  top: 33%;
+}
+
+#resources {
+  top: 66%;
+}
+
+.container {
+  height: 100px;
+  width: 100%;
+}
