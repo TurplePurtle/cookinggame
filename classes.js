@@ -1,4 +1,4 @@
-import {assert, isEmpty, remove, removeIndex, uniqueId} from './util.js';
+import {assert, count, isEmpty, remove, removeFirst, removeIndex, uniqueId} from './util.js';
 
 export class ItemType {
   /**
@@ -22,13 +22,6 @@ export class ItemType {
     this.time = time;
   }
 
-  /**
-   * @returns {Item}
-   */
-  create() {
-    return new Item(this);
-  }
-
   toString() {
     return `[ItemType ${this.name}]`;
   }
@@ -42,20 +35,6 @@ export class Item {
     this.id = uniqueId.next();
     this.createdAt = Date.now();
     this.type = type;
-    this.onclick = () => {
-      const orderIndex = Item.state.orders.findIndex(order =>
-        order.contains(this.type),
-      );
-      if (orderIndex >= 0) {
-        remove(this, Item.state.items);
-        removeIndex(orderIndex, Item.state.orders);
-      } else if (this.type.tapAction != undefined) {
-        this.type.tapAction.execute(this, Item.state.items);
-      }
-    };
-    this.ontimer = () => {
-      this.type.timerAction?.execute(this, Item.state.items);
-    };
   }
 
   get name() {
@@ -71,30 +50,51 @@ export class Item {
   }
 }
 
-/** @type {GameState} */
-Item.state;
+/** @typedef {[ItemType, number]} Delta */
+
+/**
+ * @param {Delta} delta
+ * @returns {boolean}
+ */
+function isAmountNonZero([, amount]) {
+  return amount !== 0;
+}
 
 export class Action {
   /**
-   * @param {ItemType} itemType
-   * @param {number} amount
+   * @param {Delta[]} deltas
    */
-  constructor(itemType, amount = 1) {
-    this.itemType = itemType;
-    this.amount = amount;
+  constructor(deltas) {
+    assert(deltas.every(isAmountNonZero));
+    this.deltas = deltas;
   }
 
   /**
    * @param {Item} item
    * @param {Item[]} items
+   * @returns {boolean}
    */
   execute(item, items) {
+    const meetRequirements = this.deltas.every(([itemType, amount]) => {
+      if (amount >= 0) return true;
+      return count(items, i => i.type === itemType) >= -amount;
+    });
+    if (!meetRequirements) return false;
     if (item.type.isConsumable) {
-      if (!remove(item, items)) return;
+      if (!remove(item, items)) return false;
     }
-    for (let i = 0; i < this.amount; i++) {
-      items.push(this.itemType.create());
+    for (const [itemType, amount] of this.deltas) {
+      if (amount < 0) {
+        for (let i = 0; i < -amount; i++) {
+          assert(removeFirst(items, item => item.type === itemType));
+        }
+      } else if (amount > 0) {
+        for (let i = 0; i < amount; i++) {
+          items.push(new Item(itemType));
+        }
+      }
     }
+    return true;
   }
 }
 
@@ -139,10 +139,12 @@ export class GameState {
   /**
    * @param {Item[]} resources
    * @param {OrderMaker} orderMaker
+   * @param {number} goal
    */
-  constructor(resources, orderMaker) {
+  constructor(resources, orderMaker, goal) {
     this.resources = resources;
     this.orderMaker = orderMaker;
+    this.goal = goal;
     /** @type {Order[]} */
     this.orders = [];
     /** @type {Order[]} */
@@ -153,15 +155,17 @@ export class GameState {
     this.orderDelay = 2000;
   }
 
-  completed() {
-    return this.orderMaker.done && isEmpty(this.orders) && isEmpty(this.queuedOrders);
+  isFinished() {
+    return (
+      this.orderMaker.done && isEmpty(this.orders) && isEmpty(this.queuedOrders)
+    );
   }
 
   tick() {
     const now = Date.now();
     for (const item of this.items) {
       if (item.getAge() > item.type.time) {
-        item.ontimer();
+        this.onItemTimer(item);
       }
     }
     for (const order of this.orders) {
@@ -176,11 +180,35 @@ export class GameState {
         this.orders.push(order);
       }
     }
-    while (!this.orderMaker.done &&
-        this.orders.length + this.queuedOrders.length < this.maxOrders) {
+    while (
+      !this.orderMaker.done &&
+      this.orders.length + this.queuedOrders.length < this.maxOrders
+    ) {
       const order = this.orderMaker.next();
       order.createdAt = now;
       this.queuedOrders.push(order);
     }
+  }
+
+  /**
+   * @param {Item} item
+   */
+  onItemTap(item) {
+    const orderIndex = this.orders.findIndex(order =>
+      order.contains(item.type),
+    );
+    if (orderIndex >= 0) {
+      remove(item, this.items);
+      removeIndex(orderIndex, this.orders);
+    } else if (item.type.tapAction != undefined) {
+      item.type.tapAction.execute(item, this.items);
+    }
+  }
+
+  /**
+   * @param {Item} item
+   */
+  onItemTimer(item) {
+    item.type.timerAction?.execute(item, this.items);
   }
 }

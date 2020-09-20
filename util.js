@@ -1,4 +1,9 @@
 /**
+ * @template T
+ * @typedef {(x: T) => boolean} Predicate
+ */
+
+/**
  * @param {boolean} cond
  * @param {string} msg
  */
@@ -17,6 +22,7 @@ export const uniqueId = {
 /**
  * @template T
  * @param {T[]} array
+ * @returns {boolean}
  */
 export function isEmpty(array) {
   return array.length === 0;
@@ -43,4 +49,43 @@ export function remove(item, array) {
   if (index < 0) return false;
   removeIndex(index, array);
   return true;
+}
+
+/**
+ * @template T
+ * @param {T[]} array
+ * @param {Predicate<T>} where
+ * @returns {boolean}
+ */
+export function removeFirst(array, where) {
+  const index = array.findIndex(where);
+  if (index < 0) return false;
+  removeIndex(index, array);
+  return true;
+}
+
+// /**
+//  * @template T
+//  * @param {T[]} array
+//  * @param {Predicate<T>} where
+//  */
+// export function removeWhere(array, where) {
+//   const newArray = array.filter(where);
+//   array.length = newArray.length;
+//   for (let i = 0; i < newArray.length; i++) {
+//     array[i] = newArray[i];
+//   }
+// }
+
+/**
+ * @template T
+ * @param {T[]} array
+ * @param {Predicate<T>} where
+ */
+export function count(array, where) {
+  let count = 0;
+  for (const item of array) {
+    if (where(item)) count++;
+  }
+  return count;
 }

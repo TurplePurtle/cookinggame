@@ -6,16 +6,17 @@ import {Item, Order, GameState} from './classes.js';
 
 /**
  * @param {Item} item
+ * @param {GameState} state
  * @returns {unknown}
  */
-function renderItem(item) {
+function renderItem(item, state) {
   const style = styleMap({
     fontWeight: item.type.tapAction != null ? 'bold' : '',
   });
   const timer = item.type.timerAction
     ? ` ${Math.ceil((item.type.time - item.getAge()) / 1000)}`
     : '';
-  return html`<span @mousedown=${item.onclick} style=${style}
+  return html`<span @mousedown=${() => state.onItemTap(item)} style=${style}
     >(${item.name}${timer})</span
   >`;
 }
@@ -33,11 +34,11 @@ function renderOrder(order) {
  * @param {GameState} state
  * @returns {unknown}
  */
-function renderRoot({orders, items, resources}) {
+function renderRoot(state) {
   return html`
-    <p>Orders: ${orders.map(renderOrder)}</p>
-    <p>Items: ${items.map(renderItem)}</p>
-    <p>Resources: ${resources.map(renderItem)}</p>
+    <p>Orders: ${state.orders.map(renderOrder)}</p>
+    <p>Items: ${state.items.map(item => renderItem(item, state))}</p>
+    <p>Resources: ${state.resources.map(item => renderItem(item, state))}</p>
   `;
 }
 
