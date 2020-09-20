@@ -1,3 +1,5 @@
+import {assert, isEmpty, remove, removeIndex, uniqueId} from './util.js';
+
 export class ItemType {
   /**
    * @param {string} name
@@ -31,14 +33,6 @@ export class ItemType {
     return `[ItemType ${this.name}]`;
   }
 }
-
-const uniqueId = {
-  /** @private */
-  _nextId: 1,
-  next() {
-    return this._nextId++;
-  },
-};
 
 export class Item {
   /**
@@ -123,17 +117,44 @@ export class Order {
   }
 }
 
+export class OrderMaker {
+  /**
+   * @param {Order[]} orders
+   */
+  constructor(orders) {
+    this.orders = orders;
+    this._index = 0;
+  }
+
+  get done() {
+    return this._index >= this.orders.length;
+  }
+
+  next() {
+    return this.orders[this._index++];
+  }
+}
+
 export class GameState {
   /**
    * @param {Item[]} resources
+   * @param {OrderMaker} orderMaker
    */
-  constructor(resources) {
-    /** @type {Item[]} */
+  constructor(resources, orderMaker) {
     this.resources = resources;
+    this.orderMaker = orderMaker;
     /** @type {Order[]} */
     this.orders = [];
+    /** @type {Order[]} */
+    this.queuedOrders = [];
     /** @type {Item[]} */
     this.items = [];
+    this.maxOrders = 2;
+    this.orderDelay = 2000;
+  }
+
+  completed() {
+    return this.orderMaker.done && isEmpty(this.orders) && isEmpty(this.queuedOrders);
   }
 
   tick() {
@@ -148,28 +169,18 @@ export class GameState {
         remove(order, this.orders);
       }
     }
+    for (const order of this.queuedOrders) {
+      if (now - order.createdAt >= this.orderDelay) {
+        assert(remove(order, this.queuedOrders));
+        order.createdAt = now;
+        this.orders.push(order);
+      }
+    }
+    while (!this.orderMaker.done &&
+        this.orders.length + this.queuedOrders.length < this.maxOrders) {
+      const order = this.orderMaker.next();
+      order.createdAt = now;
+      this.queuedOrders.push(order);
+    }
   }
-}
-
-/**
- * @template T
- * @param {number} index
- * @param {T[]} array
- */
-function removeIndex(index, array) {
-  if (index < 0 || index >= array.length) throw Error('Index out of bounds.');
-  array.splice(index, 1);
-}
-
-/**
- * @template T
- * @param {T} item
- * @param {T[]} array
- * @returns {boolean}
- */
-function remove(item, array) {
-  const index = array.indexOf(item);
-  if (index < 0) return false;
-  removeIndex(index, array);
-  return true;
 }
